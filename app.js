@@ -6,7 +6,7 @@
 // ==================== FIREBASE CONFIGURATION ====================
 // Silakan isi variabel di bawah ini dengan konfigurasi dari Firebase Console Anda!
 const firebaseConfig = {
-    apiKey: "AIzaSyBbbMz6X7cI5nFYYmSKgfZUFOGoCd7-azs
+    apiKey: "AIzaSyBbbMz6X7cI5nFYYmSKgfZUFOGoCd7-azs",
     authDomain: "beproject16-e9fa7.firebaseapp.com",
     databaseURL: "https://beproject16-e9fa7-default-rtdb.asia-southeast1.firebasedatabase.app",
     projectId: "beproject16-e9fa7",
