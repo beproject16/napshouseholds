@@ -3,6 +3,24 @@
    Handles navigation, modals, utilities, backup
    ======================================== */
 
+// ==================== FIREBASE CONFIGURATION ====================
+// Silakan isi variabel di bawah ini dengan konfigurasi dari Firebase Console Anda!
+const firebaseConfig = {
+    apiKey: "AIzaSyBbbMz6X7cI5nFYYmSKgfZUFOGoCd7-azs",
+    authDomain: "beproject16-e9fa7.firebaseapp.com",
+    projectId: "beproject16-e9fa7",
+    storageBucket: "beproject16-e9fa7.firebasestorage.app",
+    messagingSenderId: "53552382226",
+    appId: "1:53552382226:web:e3385ecae3d4b7e403b3cb",
+    measurementId: "G-RKT4ZCTR14"
+};
+
+let database = null;
+if (typeof firebase !== 'undefined' && firebaseConfig.apiKey !== "YOUR_API_KEY") {
+    firebase.initializeApp(firebaseConfig);
+    database = firebase.database();
+}
+
 // ==================== NAVIGATION ====================
 const navItems = document.querySelectorAll('.nav-item');
 const pages = document.querySelectorAll('.page');
@@ -96,6 +114,12 @@ function generateId() {
 function saveData(key, data) {
     try {
         localStorage.setItem('bella_' + key, JSON.stringify(data));
+
+        // Kirim ke Firebase jika terhubung
+        if (database) {
+            database.ref('bella_' + key).set(data)
+                .catch(e => console.error('Firebase write error:', e));
+        }
     } catch (e) {
         console.error('Failed to save data:', e);
     }
@@ -230,3 +254,50 @@ backupFileInput.addEventListener('change', (e) => {
     reader.readAsText(file);
     backupFileInput.value = '';
 });
+
+
+// ==================== REALTIME DATABASE SYNC ====================
+if (database) {
+    // Dengarkan perubahan database di cloud secara real-time
+    database.ref().on('value', (snapshot) => {
+        const cloudData = snapshot.val();
+        if (!cloudData) return;
+
+        let hasChanges = false;
+
+        BACKUP_KEYS.forEach(fullKey => {
+            const cloudVal = cloudData[fullKey];
+            if (cloudVal !== undefined && cloudVal !== null) {
+                const localValStr = localStorage.getItem(fullKey);
+                const cloudValStr = JSON.stringify(cloudVal);
+
+                if (localValStr !== cloudValStr) {
+                    localStorage.setItem(fullKey, cloudValStr);
+                    hasChanges = true;
+                }
+            }
+        });
+
+        if (hasChanges) {
+            showSyncNotification();
+        }
+    });
+}
+
+function showSyncNotification() {
+    if (document.getElementById('sync-toast')) return;
+
+    const toast = document.createElement('div');
+    toast.id = 'sync-toast';
+    toast.className = 'sync-toast';
+    toast.innerHTML = `
+        <div class="sync-toast-content">
+            <span class="sync-toast-icon">🔄</span>
+            <span class="sync-toast-text">Data baru dari perangkat lain terdeteksi.</span>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="location.reload()" style="background: var(--accent); color: #fff; border: none; padding: 6px 12px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-left: 8px;">
+            Sync Sekarang
+        </button>
+    `;
+    document.body.appendChild(toast);
+}
