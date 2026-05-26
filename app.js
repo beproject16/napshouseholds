@@ -253,7 +253,8 @@ backupFileInput.addEventListener('change', (e) => {
             alert('✅ Backup restored successfully! The page will reload.');
             location.reload();
         } catch (err) {
-            alert('❌ Invalid backup file.');
+            console.error('Import backup failed:', err);
+            alert('❌ Invalid backup file. Detail: ' + err.message);
         }
     };
     reader.readAsText(file);
