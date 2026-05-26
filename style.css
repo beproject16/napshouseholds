@@ -2028,3 +2028,53 @@ body {
         width: 100%;
     }
 }
+
+/* ========================================
+   REALTIME SYNC TOAST
+   ======================================== */
+.sync-toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: rgba(30, 27, 75, 0.85); /* Premium Dark Indigo */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 16px 20px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    animation: syncSlideInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    color: #ffffff;
+    font-family: 'Inter', sans-serif;
+}
+
+.sync-toast-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sync-toast-icon {
+    font-size: 1.2rem;
+    display: inline-block;
+}
+
+.sync-toast-text {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+@keyframes syncSlideInUp {
+    from {
+        transform: translateY(100px) scale(0.9);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}
