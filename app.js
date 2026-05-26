@@ -245,6 +245,10 @@ backupFileInput.addEventListener('change', (e) => {
             const backup = JSON.parse(ev.target.result);
             Object.keys(backup).forEach(key => {
                 localStorage.setItem(key, JSON.stringify(backup[key]));
+                if (database) {
+                    database.ref(key).set(backup[key])
+                        .catch(err => console.error('Firebase restore error:', err));
+                }
             });
             alert('✅ Backup restored successfully! The page will reload.');
             location.reload();
