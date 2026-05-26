@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bella's Household Dashboard</title>
+    <meta name="description" content="All-in-one household dashboard: finances, recipes, kids development & activities">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <span class="logo-icon">🏠</span>
+                <span class="logo-text">Bella's Home</span>
+            </div>
+            <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">☰</button>
+        </div>
+
+        <ul class="nav-list">
+            <li class="nav-item active" data-page="financial">
+                <span class="nav-icon">💰</span>
+                <span class="nav-label">Financial</span>
+            </li>
+            <li class="nav-item" data-page="budget">
+                <span class="nav-icon">📊</span>
+                <span class="nav-label">Budget</span>
+            </li>
+            <li class="nav-item" data-page="recipes">
+                <span class="nav-icon">🍳</span>
+                <span class="nav-label">Recipes & Grocery</span>
+            </li>
+            <li class="nav-item" data-page="development">
+                <span class="nav-icon">👶</span>
+                <span class="nav-label">Kids Development</span>
+            </li>
+            <li class="nav-item" data-page="activities">
+                <span class="nav-icon">📅</span>
+                <span class="nav-label">Kids Activity</span>
+            </li>
+            <li class="nav-item" data-page="diary">
+                <span class="nav-icon">📓</span>
+                <span class="nav-label">My Diary</span>
+            </li>
+        </ul>
+
+        <div class="sidebar-footer">
+            <button class="btn-backup" id="btn-export" title="Export all data">📤 Export Backup</button>
+            <button class="btn-backup" id="btn-import-backup" title="Import backup data">📥 Import Backup</button>
+            <input type="file" id="backup-file-input" accept=".json" style="display:none">
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content" id="main-content">
+        <!-- Header -->
+        <header class="top-header">
+            <div class="header-left">
+                <button class="mobile-menu-btn" id="mobile-menu-btn">☰</button>
+                <h1 id="page-title">Financial Dashboard</h1>
+            </div>
+            <div class="header-right">
+                <span class="greeting">Welcome back, <strong>Bella</strong> 💜</span>
+                <span class="today-date" id="today-date"></span>
+            </div>
+        </header>
+
+        <!-- ==================== FINANCIAL PAGE ==================== -->
+        <section class="page active" id="page-financial">
+            <!-- Import Area -->
+            <div class="import-bar glass-card">
+                <div class="import-left">
+                    <h3>📄 Import Bank Statement</h3>
+                    <p class="text-muted">Upload your bank statement PDF to auto-import transactions</p>
+                </div>
+                <div class="import-right">
+                    <label class="btn btn-primary" for="bank-pdf-input">
+                        Choose PDF File
+                    </label>
+                    <input type="file" id="bank-pdf-input" accept=".pdf,.csv" style="display:none">
+                    <button class="btn btn-outline" id="btn-add-transaction">+ Add Manual</button>
+                </div>
+            </div>
+
+            <!-- Global Dashboard Filters -->
+            <div class="glass-card" style="margin-bottom: 20px; padding: 16px 22px;">
+                <div
+                    style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+                    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                        <div class="form-group" style="margin:0;">
+                            <label style="font-size: 0.75rem; margin-bottom: 4px; display: block;">Start Date</label>
+                            <input type="date" id="fin-filter-start" class="input-text"
+                                style="padding: 6px 12px; width: 150px;">
+                        </div>
+                        <div class="form-group" style="margin:0;">
+                            <label style="font-size: 0.75rem; margin-bottom: 4px; display: block;">End Date</label>
+                            <input type="date" id="fin-filter-end" class="input-text"
+                                style="padding: 6px 12px; width: 150px;">
+                        </div>
+                        <div class="form-group" style="margin:0;">
+                            <label style="font-size: 0.75rem; margin-bottom: 4px; display: block;">Category</label>
+                            <select id="fin-filter-category" class="input-select"
+                                style="padding: 6px 12px; width: 160px;">
+                                <option value="">All Categories</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-outline btn-sm" id="btn-manage-categories">⚙️ Categories</button>
+                        <button class="btn btn-outline btn-sm" id="btn-reset-filters">Reset Filters</button>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="summary-grid">
+                <div class="glass-card summary-card">
+                    <div class="summary-icon">💵</div>
+                    <div class="summary-info">
+                        <span class="summary-label">Net Balance</span>
+                        <span class="summary-value" id="fin-balance">Rp 0</span>
+                    </div>
+                </div>
+                <div class="glass-card summary-card">
+                    <div class="summary-icon">📈</div>
+                    <div class="summary-info">
+                        <span class="summary-label">Total Income</span>
+                        <span class="summary-value income-text" id="fin-income">Rp 0</span>
+                    </div>
+                </div>
+                <div class="glass-card summary-card">
+                    <div class="summary-icon">📉</div>
+                    <div class="summary-info">
+                        <span class="summary-label">Total Expense</span>
+                        <span class="summary-value expense-text" id="fin-expense">Rp 0</span>
+                    </div>
+                </div>
+                <div class="glass-card summary-card">
+                    <div class="summary-icon">📊</div>
+                    <div class="summary-info">
+                        <span class="summary-label">Investment Value</span>
+                        <span class="summary-value accent-text" id="fin-investment">Rp 0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="charts-row">
+                <div class="glass-card chart-card">
+                    <h3>Spending by Category</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="chart-expense-category"></canvas>
+                    </div>
+                </div>
+                <div class="glass-card chart-card">
+                    <h3>Monthly Income vs Expense</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="chart-monthly-trend"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transactions Table -->
+            <div class="glass-card">
+                <div class="section-header">
+                    <h3>Transactions</h3>
+                </div>
+                <div class="data-table-container">
+                    <table class="data-table" id="transactions-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Category</th>
+                                <th>Amount</th>
+                                <th>Type</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactions-body">
+                        </tbody>
+                    </table>
+                    <div class="empty-state" id="fin-empty">
+                        <p>No transactions found for this period.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Investment Section -->
+            <div class="glass-card" style="margin-top:20px;">
+                <div class="section-header">
+                    <h3>💼 Investment Portfolio</h3>
+                    <button class="btn btn-outline btn-sm" id="btn-add-investment">+ Add Asset</button>
+                </div>
+                <div class="invest-grid">
+                    <div class="invest-table-wrap">
+                        <table class="data-table" id="investment-table">
+                            <thead>
+                                <tr>
+                                    <th>Asset Name</th>
+                                    <th>Type</th>
+                                    <th>Value (Rp)</th>
+                                    <th>Allocation</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="investment-body">
+                            </tbody>
+                        </table>
+                        <div class="empty-state" id="invest-empty">
+                            <span class="empty-icon">💼</span>
+                            <p>No investments tracked yet.</p>
+                        </div>
+                    </div>
+                    <div class="chart-wrapper chart-wrapper-sm">
+                        <canvas id="chart-investment"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== RECIPES PAGE ==================== -->
+        <section class="page" id="page-recipes">
+            <div class="recipes-layout">
+                <!-- Left: Recipe List -->
+                <div class="glass-card recipes-list-panel">
+                    <div class="section-header">
+                        <h3>📖 My Recipes</h3>
+                        <button class="btn btn-primary btn-sm" id="btn-add-recipe">+ New Recipe</button>
+                    </div>
+                    <input type="text" class="input-text" id="recipe-search" placeholder="🔍 Search recipes...">
+                    <ul class="recipe-list" id="recipe-list">
+                    </ul>
+                    <div class="empty-state" id="recipe-empty">
+                        <span class="empty-icon">🍳</span>
+                        <p>No recipes yet. Add your first recipe!</p>
+                    </div>
+                </div>
+
+                <!-- Right: Recipe Detail / Weekly Planner -->
+                <div class="recipes-detail-panel">
+                    <!-- Recipe Detail View -->
+                    <div class="glass-card" id="recipe-detail" style="display:none;">
+                        <div class="section-header">
+                            <h3 id="recipe-detail-name">Recipe Name</h3>
+                            <div class="btn-group">
+                                <button class="btn btn-outline btn-sm" id="btn-edit-recipe">✏️ Edit</button>
+                                <button class="btn btn-danger btn-sm" id="btn-delete-recipe">🗑️</button>
+                            </div>
+                        </div>
+                        <p class="text-muted" id="recipe-detail-servings">Serves: 4</p>
+                        <h4 style="margin-top:16px;">Ingredients</h4>
+                        <ul class="ingredient-list" id="recipe-detail-ingredients">
+                        </ul>
+                        <h4 style="margin-top:16px;">Instructions</h4>
+                        <div class="recipe-instructions" id="recipe-detail-instructions"></div>
+                    </div>
+
+                    <!-- Weekly Meal Planner -->
+                    <div class="glass-card" style="margin-top:20px;">
+                        <div class="section-header">
+                            <h3>📅 Weekly Meal Plan</h3>
+                            <button class="btn btn-accent btn-sm" id="btn-generate-grocery">🛒 Generate Grocery
+                                List</button>
+                        </div>
+                        <div class="week-planner" id="week-planner">
+                            <!-- Generated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Generated Grocery List -->
+                    <div class="glass-card" id="grocery-list-card" style="margin-top:20px; display:none;">
+                        <div class="section-header">
+                            <h3>🛒 Grocery List</h3>
+                            <span class="badge" id="grocery-count">0 items</span>
+                        </div>
+                        <ul class="grocery-list" id="grocery-list">
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== KIDS DEVELOPMENT PAGE ==================== -->
+        <section class="page" id="page-development">
+            <!-- Child Profile Card -->
+            <div class="glass-card child-profile-card">
+                <div class="section-header">
+                    <h3>👶 Child Profile</h3>
+                    <button class="btn btn-outline btn-sm" id="btn-edit-child">✏️ Edit</button>
+                </div>
+                <div class="child-info-row" id="child-info-row">
+                    <div class="child-info-item">
+                        <span class="label">Name</span>
+                        <span class="value" id="child-name">Not set</span>
+                    </div>
+                    <div class="child-info-item">
+                        <span class="label">Date of Birth</span>
+                        <span class="value" id="child-dob">Not set</span>
+                    </div>
+                    <div class="child-info-item">
+                        <span class="label">Age</span>
+                        <span class="value" id="child-age">—</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dev-grid">
+                <!-- Growth Tracker -->
+                <div class="glass-card">
+                    <div class="section-header">
+                        <h3>📏 Growth Tracker</h3>
+                        <button class="btn btn-primary btn-sm" id="btn-add-growth">+ Log Growth</button>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="chart-growth"></canvas>
+                    </div>
+                    <div class="growth-log-list" id="growth-log-list">
+                    </div>
+                </div>
+
+                <!-- Milestones -->
+                <div class="glass-card">
+                    <div class="section-header">
+                        <h3>🏆 Milestones</h3>
+                        <div class="milestone-progress-wrap">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="milestone-progress-fill" style="width:0%"></div>
+                            </div>
+                            <span class="text-muted" id="milestone-progress-text">0 / 0 achieved</span>
+                        </div>
+                    </div>
+                    <div class="milestone-filters">
+                        <button class="chip active" data-filter="all">All</button>
+                        <button class="chip" data-filter="motor">🏃 Motor</button>
+                        <button class="chip" data-filter="cognitive">🧠 Cognitive</button>
+                        <button class="chip" data-filter="social">🤝 Social</button>
+                        <button class="chip" data-filter="language">💬 Language</button>
+                    </div>
+                    <ul class="milestone-list" id="milestone-list">
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== KIDS ACTIVITY PAGE ==================== -->
+        <section class="page" id="page-activities">
+            <div class="activity-layout">
+                <!-- Calendar -->
+                <div class="glass-card calendar-panel">
+                    <div class="calendar-header">
+                        <button class="btn btn-icon" id="cal-prev">◀</button>
+                        <h3 id="cal-month-label">February 2026</h3>
+                        <button class="btn btn-icon" id="cal-next">▶</button>
+                    </div>
+                    <div class="calendar-grid" id="calendar-grid">
+                        <!-- Days of week headers + day cells generated by JS -->
+                    </div>
+                </div>
+
+                <!-- Right Panel: Daily Activity Planner -->
+                <div class="activity-detail-panel">
+                    <div class="glass-card">
+                        <div class="section-header">
+                            <h3 id="activity-day-label">Day Planner</h3>
+                            <button class="btn btn-primary btn-sm" id="btn-add-activity">+ Add Activity</button>
+                        </div>
+                        <div id="activity-recommendations">
+                            <div class="empty-state">
+                                <span class="empty-icon">📅</span>
+                                <p>Select a day on the calendar to see your scheduled activities</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Activity Library -->
+                    <div class="glass-card" style="margin-top:20px;">
+                        <div class="section-header">
+                            <h3>📚 Activity Library</h3>
+                            <span class="badge" id="activity-lib-count">0 activities</span>
+                        </div>
+                        <input type="text" class="input-text" id="activity-search"
+                            placeholder="🔍 Search activities...">
+                        <div class="activity-library-list" id="activity-library-list">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== DIARY PAGE ==================== -->
+        <section class="page" id="page-diary">
+            <!-- Diary Header Bar -->
+            <div class="glass-card diary-header-bar">
+                <div class="diary-header-left">
+                    <h3>📓 My Diary</h3>
+                    <p class="text-muted">Capture your thoughts, moments & memories</p>
+                </div>
+                <div class="diary-header-right">
+                    <button class="btn btn-primary" id="btn-add-diary">+ New Note</button>
+                </div>
+            </div>
+
+            <!-- Diary Stats -->
+            <div class="diary-stats-row">
+                <div class="glass-card diary-stat">
+                    <span class="diary-stat-icon">📝</span>
+                    <div class="diary-stat-info">
+                        <span class="diary-stat-value" id="diary-total-count">0</span>
+                        <span class="diary-stat-label">Total Entries</span>
+                    </div>
+                </div>
+                <div class="glass-card diary-stat">
+                    <span class="diary-stat-icon">📅</span>
+                    <div class="diary-stat-info">
+                        <span class="diary-stat-value" id="diary-this-month">0</span>
+                        <span class="diary-stat-label">This Month</span>
+                    </div>
+                </div>
+                <div class="glass-card diary-stat">
+                    <span class="diary-stat-icon">🔥</span>
+                    <div class="diary-stat-info">
+                        <span class="diary-stat-value" id="diary-streak">0</span>
+                        <span class="diary-stat-label">Day Streak</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Diary Filters & Download -->
+            <div class="glass-card diary-toolbar">
+                <div class="diary-filters">
+                    <div class="form-group" style="margin:0;">
+                        <label style="font-size: 0.75rem; margin-bottom: 4px; display: block;">Start Date</label>
+                        <input type="date" id="diary-filter-start" class="input-text" style="padding: 6px 12px; width: 150px;">
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label style="font-size: 0.75rem; margin-bottom: 4px; display: block;">End Date</label>
+                        <input type="date" id="diary-filter-end" class="input-text" style="padding: 6px 12px; width: 150px;">
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label style="font-size: 0.75rem; margin-bottom: 4px; display: block;">Search</label>
+                        <input type="text" id="diary-search" class="input-text" placeholder="🔍 Search title or desc..." style="padding: 6px 12px; width: 200px;">
+                    </div>
+                </div>
+                <div class="diary-actions">
+                    <button class="btn btn-outline btn-sm" id="btn-diary-reset-filters">Reset</button>
+                    <div class="diary-download-group">
+                        <button class="btn btn-accent btn-sm" id="btn-diary-download-all">📥 Download All</button>
+                        <button class="btn btn-outline btn-sm" id="btn-diary-download-selected" disabled>📥 Download Selected</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Diary Table -->
+            <div class="glass-card">
+                <div class="section-header">
+                    <h3>Diary Entries</h3>
+                    <div class="diary-select-actions">
+                        <label class="diary-select-all-label">
+                            <input type="checkbox" id="diary-select-all"> Select All
+                        </label>
+                        <span class="badge" id="diary-selected-count" style="display:none;">0 selected</span>
+                    </div>
+                </div>
+                <div class="data-table-container">
+                    <table class="data-table" id="diary-table">
+                        <thead>
+                            <tr>
+                                <th style="width:40px;"></th>
+                                <th>Date</th>
+                                <th>Title</th>
+                                <th>Description</th>
+                                <th style="width:100px;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="diary-body">
+                        </tbody>
+                    </table>
+                    <div class="empty-state" id="diary-empty">
+                        <span class="empty-icon">📓</span>
+                        <p>No diary entries yet. Start writing your first note!</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== BUDGET PAGE ==================== -->
+        <section class="page" id="page-budget">
+            <!-- Budget Header Bar -->
+            <div class="glass-card budget-header-bar">
+                <div class="budget-header-left">
+                    <h3>📊 Budget vs Actual</h3>
+                    <p class="text-muted">Compare your monthly budget against actual spending</p>
+                </div>
+                <div class="budget-header-right">
+                    <div class="form-group" style="margin:0;">
+                        <label style="font-size: 0.75rem; margin-bottom: 4px; display: block;">Year</label>
+                        <select id="budget-year-filter" class="input-select" style="padding: 6px 12px; width: 120px;"></select>
+                    </div>
+                    <label class="btn btn-primary" for="budget-excel-input">
+                        📥 Import Excel
+                    </label>
+                    <input type="file" id="budget-excel-input" accept=".xlsx,.xls" style="display:none">
+                    <button class="btn btn-outline" id="btn-budget-export">📤 Export</button>
+                </div>
+            </div>
+
+            <!-- Budget Summary Cards -->
+            <div class="budget-stats-row">
+                <div class="glass-card budget-stat">
+                    <span class="budget-stat-icon">🎯</span>
+                    <div class="budget-stat-info">
+                        <span class="budget-stat-value" id="budget-total-budget">Rp 0</span>
+                        <span class="budget-stat-label">Total Budget (YTD)</span>
+                    </div>
+                </div>
+                <div class="glass-card budget-stat">
+                    <span class="budget-stat-icon">💸</span>
+                    <div class="budget-stat-info">
+                        <span class="budget-stat-value" id="budget-total-actual">Rp 0</span>
+                        <span class="budget-stat-label">Total Actual (YTD)</span>
+                    </div>
+                </div>
+                <div class="glass-card budget-stat">
+                    <span class="budget-stat-icon" id="budget-variance-icon">✅</span>
+                    <div class="budget-stat-info">
+                        <span class="budget-stat-value" id="budget-total-variance">Rp 0</span>
+                        <span class="budget-stat-label">Variance</span>
+                    </div>
+                </div>
+                <div class="glass-card budget-stat">
+                    <span class="budget-stat-icon">📈</span>
+                    <div class="budget-stat-info">
+                        <span class="budget-stat-value" id="budget-utilization">0%</span>
+                        <span class="budget-stat-label">Budget Utilization</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Budget vs Actual Table -->
+            <div class="glass-card" style="margin-bottom: 20px;">
+                <div class="section-header">
+                    <h3>Monthly Budget vs Actual</h3>
+                    <button class="btn btn-outline btn-sm" id="btn-budget-add-category">+ Add Category</button>
+                </div>
+                <div class="budget-table-container" id="budget-table-container">
+                    <table class="data-table budget-table" id="budget-table">
+                        <thead id="budget-thead"></thead>
+                        <tbody id="budget-tbody"></tbody>
+                        <tfoot id="budget-tfoot"></tfoot>
+                    </table>
+                    <div class="empty-state" id="budget-empty">
+                        <span class="empty-icon">📊</span>
+                        <p>No budget data yet. Import from Excel or add categories manually.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Budget Charts Row -->
+            <div class="charts-row">
+                <div class="glass-card chart-card">
+                    <h3>Budget vs Actual by Category</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="chart-budget-category"></canvas>
+                    </div>
+                </div>
+                <div class="glass-card chart-card">
+                    <h3>Monthly Variance Trend</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="chart-budget-variance"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ==================== MODALS ==================== -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal glass-card" id="modal">
+            <div class="modal-header">
+                <h3 id="modal-title">Modal</h3>
+                <button class="btn-close" id="modal-close">×</button>
+            </div>
+            <div class="modal-body" id="modal-body">
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="app.js"></script>
+    <script src="modules/financial.js"></script>
+    <script src="modules/recipes.js"></script>
+    <script src="modules/kids-development.js"></script>
+    <script src="modules/kids-activity.js"></script>
+    <script src="modules/diary.js"></script>
+    <script src="modules/budget.js"></script>
+</body>
+
+</html>
